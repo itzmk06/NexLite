@@ -1,0 +1,16 @@
+{
+  "name": "nexlite-main",
+  "version": "1.0.0",
+  "description": "A lite version of NexLab",
+  "main": "src/app.js",
+  "scripts": {
+    "dev":"nodemon src/app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.2",
+    "nodemon": "^3.1.7"
+  }
+}
