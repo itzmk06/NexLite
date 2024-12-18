@@ -1,6 +1,8 @@
 const express=require("express");
 const {connectToDb}=require("./config/database/databaseConnect.js");
 const { User } = require("./models/user.js");
+const { sendError } = require("./utils/apiError.js");
+const { sendSuccess } = require("./utils/apiSuccess.js");
 require("dotenv").config();
 
 const app=express();
@@ -11,9 +13,9 @@ app.post("/signup",async(req,res,next)=>{
     const newUser=await User(req?.body);
     try {
         await newUser.save();
-        res.status(200).send("user created successfully!");
+        sendSuccess(res,200,"user created successfully",newUser);
     } catch (error) {
-        res.status(400).send("unable to create user!",error?.message);
+        sendError(res,400,"unable to create user",error);
     }
 });
 
@@ -21,9 +23,9 @@ app.get("/getUserByMail",async(req,res)=>{
     const {email}=req.body;
     try{
         const user=await User.findOne({email});
-        res.status(200).send(user);
+        sendSuccess(res,200,"fetching user by email",user);
     }catch(error){
-        res.status(404).send("Can't find user by email, try again later: ",error.message);
+        sendError(res,400,"can't find user by email",error);
     }
 });
 
@@ -31,18 +33,18 @@ app.get("/getUserById",async(req,res)=>{
     const {_id}=req.body;
     try {
         const user=await User.findById({_id});
-        res.status(200).send(user);
+        sendSuccess(res,200,"fetching user by id",user);
     } catch (error) {
-        res.status(404).send("Can't find user, try again later: ",error.message);
+        sendError(res,400,"can't find user",error);    
     }
 });
 
 app.get("/users",async(req,res)=>{
     try {
         const users=await User.find({});
-        res.status(200).send(users);
+        sendSuccess(res,200,"fetching all users",users);
     } catch (error) {
-        res.status(500).send("Can't find users :",error.message);
+        sendError(res,400,"can't find users",error);        
     }
 });
 
@@ -50,35 +52,36 @@ app.delete("/deleteUser",async(req,res)=>{
     const {userId}=req.body;
     try {
         await User.findByIdAndDelete({_id:userId});
-        res.status(200).send("user deleted successfully!");
+        sendSuccess(res,200,"user deleted successfully!");
     } catch (error) {
-        res.status(500).send("Unable to delete user!");
+        sendError(res,400,"unable to delete user",error);            
     }
 });
 
 app.patch("/updateUserDetails",async(req,res)=>{
     const {userId,...data}=req.body;
     try {
-        await User.findByIdAndUpdate({_id:userId},data,{returnDocument:"after"})
-        res.status(200).send("user updated successfully!");
+        const user=await User.findByIdAndUpdate({_id:userId},data,{returnDocument:"after",runValidators:true})
+        sendSuccess(res,200,"user updated successfully",user);
     } catch (error) {
-        res.status(500).send("Unable to update user!");
+        sendError(res,400,"unable to update user",error); 
     }
 });
 
 app.put("/updateUser",async(req,res)=>{
     const {userId,...data}=req.body;
     if(!userId){
-        res.status(404).send("Invalid update request!");
+        return sendError(res,400,"invalid update request",error); 
     }
     try {
-        const updatedUser=await User.findByIdAndUpdate({_id:userId},data,{new:"True"});
+        const updatedUser=await User.findByIdAndUpdate({_id:userId},data,{runValidators:true});
         if(!updatedUser){
-            res.status(404).send("User not found!");
+            return sendError(404,"user not found");
         }
-        res.send("user data updated successfully!");
+        sendSuccess(res,200,"user updated successfully",updatedUser);
+
     } catch (error) {
-        res.status(500).send("Unable to update user!");
+        sendError(res,400,"unable to update user",error);     
     }
 });
 
