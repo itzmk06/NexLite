@@ -3,6 +3,7 @@ const {connectToDb}=require("./config/database/databaseConnect.js");
 const { User } = require("./models/user.js");
 const { sendError } = require("./utils/apiError.js");
 const { sendSuccess } = require("./utils/apiSuccess.js");
+const ALLOWED_UPDATES=["firstName","lastName","password","about","skills","portfolio"];
 require("dotenv").config();
 
 const app=express();
@@ -58,9 +59,18 @@ app.delete("/deleteUser",async(req,res)=>{
     }
 });
 
-app.patch("/updateUserDetails",async(req,res)=>{
-    const {userId,...data}=req.body;
+// ? update operations 
+app.patch("/updateUserDetails/:userid",async(req,res)=>{
+    const userId=req.params?.userid;
+    const data=req.body;
+    let isUpdatesAllowed=Object.keys(data).every((k)=>ALLOWED_UPDATES.includes(k));
     try {
+        if(!userId){
+            throw new Error("userid not found")
+        }
+        if(!isUpdatesAllowed){
+            throw new Error("User update failed!");
+        }
         const user=await User.findByIdAndUpdate({_id:userId},data,{returnDocument:"after",runValidators:true})
         sendSuccess(res,200,"user updated successfully",user);
     } catch (error) {
@@ -68,13 +78,21 @@ app.patch("/updateUserDetails",async(req,res)=>{
     }
 });
 
-app.put("/updateUser",async(req,res)=>{
-    const {userId,...data}=req.body;
-    if(!userId){
-        return sendError(res,400,"invalid update request",error); 
-    }
+app.put("/updateUser/:userId",async(req,res)=>{
+    const userId=req.params?.userId;
+    const data=req.body;
+    let isUpdateAllowed=Object.keys(data).every((k)=>ALLOWED_UPDATES.includes(k));
     try {
-        const updatedUser=await User.findByIdAndUpdate({_id:userId},data,{runValidators:true});
+        if(!userId){
+            return sendError(res,400,"invalid update request",error); 
+        }
+        if(!isUpdateAllowed){
+            throw new Error("update not allowed!");
+        }
+        // get the existing data first 
+        const existingUserData=await User.findById(userId);
+        const updatedUserData={...existingUserData.toObject(),...data};
+        const updatedUser=await User.findByIdAndUpdate({_id:userId},updatedUserData,{runValidators:true,new:true});
         if(!updatedUser){
             return sendError(404,"user not found");
         }

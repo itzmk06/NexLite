@@ -77,9 +77,16 @@ const userSchema = mongoose.Schema({
         maxLength: [500, "About section cannot exceed 500 characters!"],
     },
     skills:{
-        type:Array,
-        min
-    }
+        type:[String],
+        validate:{
+            validator:function(arr){
+                return arr.length>=0&&arr.length<=100
+            },
+            message:"Skills should not exceed 100"
+        },
+        lowercase:true,
+        trim:true,
+    },
     portfolio: {
         type: String,
         minLength: [10, "Portfolio URL must be at least 10 characters long!"],
