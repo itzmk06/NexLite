@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const validator=require("validator");
 
 const userSchema = mongoose.Schema({
     username: {
@@ -36,12 +37,11 @@ const userSchema = mongoose.Schema({
         trim: true,
         minLength: [6, "Email must be at least 6 characters long!"],
         maxLength: [254, "Email cannot exceed 254 characters!"],
-        validate: {
-            validator: function (value) {
-                return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value);
-            },
-            message: "Please provide a valid email address!",
-        },
+        validate(value){
+            if(!validator.isEmail(value)){
+                throw new Error(`${value} is not valid email id!`);
+            }
+        }
     },
     age: {
         type: Number,

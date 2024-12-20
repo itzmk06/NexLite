@@ -1,4 +1,5 @@
 const express=require("express");
+const bodyParser=require("body-parser");
 const {connectToDb}=require("./config/database/databaseConnect.js");
 const { User } = require("./models/user.js");
 const { sendError } = require("./utils/apiError.js");
@@ -9,6 +10,7 @@ require("dotenv").config();
 const app=express();
 const PORT=8080;
 app.use(express.json());
+app.use(bodyParser.json());
 
 app.post("/signup",async(req,res,next)=>{
     const newUser=await User(req?.body);
